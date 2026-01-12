@@ -10,7 +10,7 @@ MAX_DISTANCE = 2000
 GRID_COLS = 3  
 MIN_DISTANCE = 200  
 MAX_DISTANCE_FILTER = 4000  
-confidence_value = 1
+confidence_value = 120
 
 # ---------------- CONFIG DRONE ----------------
 CONNECTION_STRING = 'udpin:0.0.0.0:14550'
@@ -18,7 +18,7 @@ TARGET_ALTITUDE = 1.0
 GUADAGNO_YAW = 0.5          # Sensibilità rotazione
 SOGLIA_TOLLERANZA_MM = 30   # Tolleranza tra i due punti (3cm)
 
-s
+
 # ---------------- FUNZIONI VOLO ----------------
 
 def arm_and_takeoff(vehicle, aTargetAltitude):
