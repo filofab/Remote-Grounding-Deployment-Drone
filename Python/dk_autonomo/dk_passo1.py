@@ -15,7 +15,7 @@ from config import (
 )
 
 import numpy as np
-from main import apply_flip
+from util import apply_flip
 import time
 
 def condition_yaw(vehicle, heading, direction=1):
@@ -88,7 +88,7 @@ def measure_distance_vertical(depth, confidence, x_center):
     if valid_depths.size < 50:
         return None, None, None
 
-    dist = np.percenunzioni statichetile(valid_depths, PERCENTILE_DISTANCE)
+    dist = np.percentile(valid_depths, PERCENTILE_DISTANCE)
 
     mask_close = valid & (roi_depth <= dist)
     ys, xs = np.where(mask_close)
@@ -105,7 +105,7 @@ def measure_distance_vertical(depth, confidence, x_center):
 
 
 def esegui_passo_1(vehicle, cam):
-
+    print("[INFO] Esecuzione passo 1")
     while True:
         frame = cam.requestFrame(2000)
 
@@ -143,7 +143,7 @@ def esegui_passo_1(vehicle, cam):
             posizioneCorretta = yaw_control_from_distances(vehicle, d_left, d_right)
             cv2.putText(img, "AUTONOMO", (20, 100),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-
+            '''
             #verifichiamo che mantenga la posizione per 5 secondi
             tempo_in_tolleranza = None
             if posizioneCorretta:
@@ -154,7 +154,7 @@ def esegui_passo_1(vehicle, cam):
                 break
             else:
                 tempo_in_tolleranza = None
-
+            '''
             cv2.imshow("preview", img)
             cam.releaseFrame(frame)
     #procediamo ad andare avanti di 1m e indietro di 1m

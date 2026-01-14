@@ -16,9 +16,12 @@ from config import (
     PERCENTILE_DISTANCE,
     CONFIDENCE_THRESHOLD,
     MAX_DISTANCE_MM,
-    VERTICAL_LINE_SPACING_PX
+    VERTICAL_LINE_SPACING_PX,
+    MAX_DISTANCE,
+    CONNECTION_STRING,
+    TARGET_ALTITUDE_M
 )
-
+import config
 
 
 
@@ -123,3 +126,6 @@ def main():
     cam.stop()
     cam.close()
     cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()
