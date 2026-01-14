@@ -1,10 +1,22 @@
 import cv2
 import ArducamDepthCamera as ac
 from pymavlink import mavutil
-from main import SOGLIA_TOLLERANZA_MM, GUADAGNO_YAW, MAX_YAW_DEG, ROI_WIDTH_PX, MIN_DISTANCE_MM, PERCENTILE_DISTANCE, CONFIDENCE_THRESHOLD, MAX_DISTANCE_MM
-import numpy as np
-from main import apply_flip, MAX_DISTANCE, VERTICAL_LINE_SPACING_PX
+from config import (
+    SOGLIA_TOLLERANZA_MM,
+    GUADAGNO_YAW,
+    MAX_YAW_DEG,
+    ROI_WIDTH_PX,
+    MIN_DISTANCE_MM,
+    PERCENTILE_DISTANCE,
+    CONFIDENCE_THRESHOLD,
+    MAX_DISTANCE_MM,
+    VERTICAL_LINE_SPACING_PX,
+    MAX_DISTANCE
+)
 
+import numpy as np
+from main import apply_flip
+import time
 
 def condition_yaw(vehicle, heading, direction=1):
     """
@@ -76,7 +88,7 @@ def measure_distance_vertical(depth, confidence, x_center):
     if valid_depths.size < 50:
         return None, None, None
 
-    dist = np.percentile(valid_depths, PERCENTILE_DISTANCE)
+    dist = np.percenunzioni statichetile(valid_depths, PERCENTILE_DISTANCE)
 
     mask_close = valid & (roi_depth <= dist)
     ys, xs = np.where(mask_close)
@@ -94,7 +106,7 @@ def measure_distance_vertical(depth, confidence, x_center):
 
 def esegui_passo_1(vehicle, cam):
 
-    while True and possoProcedere:
+    while True:
         frame = cam.requestFrame(2000)
 
         if frame is not None and isinstance(frame, ac.DepthData):
@@ -127,18 +139,25 @@ def esegui_passo_1(vehicle, cam):
                 cv2.putText(img, f"R: {d_right} mm", (20, 60),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-            
-            posizioneCoretta = yaw_control_from_distances(vehicle, d_left, d_right)
+
+            posizioneCorretta = yaw_control_from_distances(vehicle, d_left, d_right)
             cv2.putText(img, "AUTONOMO", (20, 100),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-            
+
+            #verifichiamo che mantenga la posizione per 5 secondi
+            tempo_in_tolleranza = None
             if posizioneCorretta:
-                passati5sec=True
-                time.
-                while posizioneCorretta and passati5sec:
-                    posizioneCoretta = yaw_control_from_distances(vehicle, d_left, d_right)
+                if tempo_in_tolleranza is None:
+                    tempo_in_tolleranza = time.monotonic()
+                elif time.monotonic() - tempo_in_tolleranza >= 5.0:
+                    print("[INFO] Posizione stabile per 5 secondi → uscita dal ciclo")
+                break
+            else:
+                tempo_in_tolleranza = None
 
             cv2.imshow("preview", img)
             cam.releaseFrame(frame)
+    #procediamo ad andare avanti di 1m e indietro di 1m
 
-        
+
+
