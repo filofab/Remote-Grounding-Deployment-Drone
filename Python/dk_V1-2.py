@@ -95,8 +95,8 @@ def condition_yaw(vehicle, heading, direction=1):
         1  -> CW  (destra)
        -1  -> CCW (sinistra)
     """
-    dir_val = 1 if direction == 1 else 0
-
+    dir_val = 1 if direction == 1 else -1
+    print(dir_val)
     msg = vehicle.message_factory.command_long_encode(
         0, 0,
         mavutil.mavlink.MAV_CMD_CONDITION_YAW,
@@ -273,3 +273,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -1,3 +1,4 @@
+
 import cv2
 import numpy as np
 import ArducamDepthCamera as ac
@@ -6,11 +7,11 @@ from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 
 # ---------------- CONFIG CAMERA ----------------
-MAX_DISTANCE = 2000  
+MAX_DISTANCE = 1000  
 GRID_COLS = 3  
 MIN_DISTANCE = 200  
 MAX_DISTANCE_FILTER = 4000  
-confidence_value = 120
+confidence_value = 1
 
 # ---------------- CONFIG DRONE ----------------
 CONNECTION_STRING = 'udpin:0.0.0.0:14550'
@@ -48,6 +49,7 @@ def arm_and_takeoff(vehicle, aTargetAltitude):
 def condition_yaw(vehicle, heading, direction=1):
     """ direction: 1=CW (Destra), -1=CCW (Sinistra) """
     dir_val = 1 if direction == 1 else 0
+    print(dir_val)
     msg = vehicle.message_factory.command_long_encode(
         0, 0, mavutil.mavlink.MAV_CMD_CONDITION_YAW, 0,
         heading, 0, dir_val, 1, 0, 0, 0) 
