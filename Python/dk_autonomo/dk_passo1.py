@@ -18,6 +18,8 @@ import numpy as np
 from util import apply_flip
 import time
 
+tempo = None
+
 def condition_yaw(vehicle, heading, direction=1):
     """
     direction:
@@ -25,7 +27,6 @@ def condition_yaw(vehicle, heading, direction=1):
        -1  -> CCW (sinistra)
     """
     dir_val = 1 if direction == 1 else -1
-    print(dir_val)
     msg = vehicle.message_factory.command_long_encode(
         0, 0,
         mavutil.mavlink.MAV_CMD_CONDITION_YAW,
@@ -61,102 +62,42 @@ def yaw_control_from_distances(vehicle, d_left, d_right):
     else:
         condition_yaw(vehicle, yaw_cmd, direction=1)
         print(f"[CTRL] YAW DESTRA  | diff {diff} mm")
-
+    return False
 
 # ============================================================
 # VISIONE TOF – MISURA ROBUSTA
 # ============================================================
 
-def measure_distance_vertical(depth, confidence, x_center):
-
-    h, w = depth.shape
-
-    x_min = max(0, x_center - ROI_WIDTH_PX // 2)
-    x_max = min(w, x_center + ROI_WIDTH_PX // 2)
-
-    roi_depth = depth[:, x_min:x_max]
-    roi_conf = confidence[:, x_min:x_max]
-
-    valid = (
-        (roi_depth >= MIN_DISTANCE_MM) &
-        (roi_depth <= MAX_DISTANCE_MM) &
-        (roi_conf >= CONFIDENCE_THRESHOLD)
-    )
-
-    valid_depths = roi_depth[valid]
-
-    if valid_depths.size < 50:
-        return None, None, None
-
-    dist = np.percentile(valid_depths, PERCENTILE_DISTANCE)
-
-    mask_close = valid & (roi_depth <= dist)
-    ys, xs = np.where(mask_close)
-
-    if ys.size == 0:
-        return None, None, None
-
-    x_mean = int(xs.mean() + x_min)
-    y_mean = int(ys.mean())
-
-    return int(dist), x_mean, y_mean
 
 
 
-
-def esegui_passo_1(vehicle, cam):
+def esegui_passo_1(vehicle, d_left, d_right, img, tempo):
     print("[INFO] Esecuzione passo 1")
-    while True:
-        frame = cam.requestFrame(2000)
 
-        if frame is not None and isinstance(frame, ac.DepthData):
+    passati5sec=False
+    posizioneCorretta = yaw_control_from_distances(vehicle, d_left, d_right)
+    cv2.putText(img, "AUTONOMO", (20, 100),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+    print("Posizione corretta",posizioneCorretta)
 
-            depth = apply_flip(frame.depth_data)
-            confidence = apply_flip(frame.confidence_data)
+    #verifichiamo che mantenga la posizione per 5 secondi
+    tempo_in_tolleranza = tempo
+    if posizioneCorretta:
+        if tempo_in_tolleranza is None:
+            tempo_in_tolleranza = time.monotonic()
+            tempo=tempo_in_tolleranza
+        elif time.monotonic() - tempo_in_tolleranza >= 5.0:
+            print("[INFO] Posizione stabile per 5 secondi → uscita dal ciclo", time.monotonic() - tempo_in_tolleranza)
+            passati5sec=True
+    else:
+        tempo_in_tolleranza = None
+    if tempo_in_tolleranza!= None:
+        print("######################################################", time.monotonic()-tempo_in_tolleranza)
 
-            img = (depth * (255.0 / MAX_DISTANCE)).astype(np.uint8)
-            img = cv2.applyColorMap(img, cv2.COLORMAP_RAINBOW)
-            img[confidence < CONFIDENCE_THRESHOLD] = (0, 0, 0)
+    if passati5sec:
+        print("#"*50)
+    return tempo_in_tolleranza
 
-            h, w = depth.shape
-            cx = w // 2
-            x_left = cx - VERTICAL_LINE_SPACING_PX // 2
-            x_right = cx + VERTICAL_LINE_SPACING_PX // 2
-
-            cv2.line(img, (x_left, 0), (x_left, h), (255, 255, 255), 1)
-            cv2.line(img, (x_right, 0), (x_right, h), (255, 255, 255), 1)
-
-            d_left, xl, yl = measure_distance_vertical(depth, confidence, x_left)
-            d_right, xr, yr = measure_distance_vertical(depth, confidence, x_right)
-
-            if d_left is not None:
-                cv2.circle(img, (xl, yl), 6, (0, 0, 255), -1)
-                cv2.putText(img, f"L: {d_left} mm", (20, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-            if d_right is not None:
-                cv2.circle(img, (xr, yr), 6, (0, 0, 255), -1)
-                cv2.putText(img, f"R: {d_right} mm", (20, 60),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-
-            posizioneCorretta = yaw_control_from_distances(vehicle, d_left, d_right)
-            cv2.putText(img, "AUTONOMO", (20, 100),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-            '''
-            #verifichiamo che mantenga la posizione per 5 secondi
-            tempo_in_tolleranza = None
-            if posizioneCorretta:
-                if tempo_in_tolleranza is None:
-                    tempo_in_tolleranza = time.monotonic()
-                elif time.monotonic() - tempo_in_tolleranza >= 5.0:
-                    print("[INFO] Posizione stabile per 5 secondi → uscita dal ciclo")
-                break
-            else:
-                tempo_in_tolleranza = None
-            '''
-            cv2.imshow("preview", img)
-            cam.releaseFrame(frame)
     #procediamo ad andare avanti di 1m e indietro di 1m
 
 

@@ -5,6 +5,7 @@ import numpy as np
 import ArducamDepthCamera as ac
 import time
 
+from util import *
 from dk_passo1 import esegui_passo_1
 from dronekit import connect, VehicleMode
 from config import (
@@ -83,23 +84,63 @@ def main():
     print("s : pausa missione")
     print("l : atterraggio")
     print("q : chiusura")
-    token=0 #-> token che identifica il passo, 0 guida controllata
-    while True:
 
-        """
-        se il token è 0 -> guida controllata
-        token 1 -> guida autonoma passo 1
-        token 2 -> guida autonoma passo 2
-        token 3 guida autonoma passo 3
-        """
-        if token==1:
-            esegui_passo_1(vehicle, cam)
-        elif token==2:
-            #esegui_passo_2()
-            pass
-        elif token==3:
-            #esegui_passo_3()
-            pass
+
+    token=0 #-> token che identifica il passo, 0 guida controllata
+    tempo=None  #variabile per il controllo del tempo in tolleranza
+    while True:
+        frame = cam.requestFrame(2000)
+
+        if frame is not None and isinstance(frame, ac.DepthData):
+
+            depth = apply_flip(frame.depth_data)
+            confidence = apply_flip(frame.confidence_data)
+
+            img = (depth * (255.0 / MAX_DISTANCE)).astype(np.uint8)
+            img = cv2.applyColorMap(img, cv2.COLORMAP_RAINBOW)
+            img[confidence < CONFIDENCE_THRESHOLD] = (0, 0, 0)
+
+            h, w = depth.shape
+            cx = w // 2
+            x_left = cx - VERTICAL_LINE_SPACING_PX // 2
+            x_right = cx + VERTICAL_LINE_SPACING_PX // 2
+
+            cv2.line(img, (x_left, 0), (x_left, h), (255, 255, 255), 1)
+            cv2.line(img, (x_right, 0), (x_right, h), (255, 255, 255), 1)
+
+            d_left, xl, yl = measure_distance_vertical(depth, confidence, x_left)
+            d_right, xr, yr = measure_distance_vertical(depth, confidence, x_right)
+
+            if d_left is not None:
+                cv2.circle(img, (xl, yl), 6, (0, 0, 255), -1)
+                cv2.putText(img, f"L: {d_left} mm", (20, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+            if d_right is not None:
+                cv2.circle(img, (xr, yr), 6, (0, 0, 255), -1)
+                cv2.putText(img, f"R: {d_right} mm", (20, 60),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+            ############################################################
+            """
+            se il token è 0 -> guida controllata
+            token 1 -> guida autonoma passo 1
+            token 2 -> guida autonoma passo 2
+            token 3 guida autonoma passo 3
+            """
+            if token == 1:
+                tempo = esegui_passo_1(vehicle, d_left, d_right, img, tempo)
+            elif token == 2:
+                # esegui_passo_2()
+                pass
+            elif token == 3:
+                # esegui_passo_3()
+                pass
+
+            ############################################################
+
+            cv2.imshow("preview", img)
+            cam.releaseFrame(frame)
 
 
 
