@@ -69,7 +69,7 @@ def main():
     # ---------- CAMERA ----------
     cam = ac.ArducamCamera()
     cam.open(ac.Connection.CSI, 0)
-    cam.start(ac.FrameType.DEPTH)
+    cam.start(ac.FrameType.DEPTH | ac.FrameType.RGB)
     cam.setControl(ac.Control.RANGE, MAX_DISTANCE)
 
     info = cam.getCameraInfo()
@@ -94,7 +94,9 @@ def main():
     while True:
         frame = cam.requestFrame(2000)
 
-        if frame is not None and isinstance(frame, ac.DepthData):
+        if frame is None:
+            continue
+        if isinstance(frame, ac.DepthData):
 
             depth = apply_flip(frame.depth_data)
             confidence = apply_flip(frame.confidence_data)
@@ -123,6 +125,8 @@ def main():
                 cv2.circle(img, (xr, yr), 6, (0, 0, 255), -1)
                 cv2.putText(img, f"R: {d_right} mm", (20, 60),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        elif isinstance(frame, ac.RGBData) and token == 4:
+            rgb_frame = apply_flip(frame.rgb_data)
 
             ############################################################
             """
@@ -142,7 +146,7 @@ def main():
             elif token == 3: #passo 2
                 # esegui_passo_2()
                 pass
-            
+
             elif token == 4: #passo 3 (AI)
                 # esegui_passo_3()
                 pass
