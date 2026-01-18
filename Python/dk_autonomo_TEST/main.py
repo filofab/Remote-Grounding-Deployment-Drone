@@ -69,7 +69,7 @@ def main():
     # ---------- CAMERA ----------
     cam = ac.ArducamCamera()
     cam.open(ac.Connection.CSI, 0)
-    cam.start(ac.FrameType.DEPTH | ac.FrameType.RGB)
+    cam.start(ac.FrameType.DEPTH)
     cam.setControl(ac.Control.RANGE, MAX_DISTANCE)
 
     info = cam.getCameraInfo()
@@ -126,7 +126,7 @@ def main():
                 cv2.putText(img, f"R: {d_right} mm", (20, 60),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         elif isinstance(frame, ac.RGBData) and token == 4:
-            rgb_frame = apply_flip(frame.rgb_data)
+                    rgb_frame = apply_flip(frame.rgb_data)
 
             ############################################################
             """

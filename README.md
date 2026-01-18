@@ -12,8 +12,7 @@ Il drone va posizionato difronte al cavo AT, alla stessa quota
 ## Passo 1 Avvio Python
 
 1. Posizionamento autonomo perpendicolare al cavo AT
-2. Tocco con Sensore di presenza corrente/tensione
-    = Si avvicina ad una distanza di 1m dal cavo e si riallontana
+2. Tocco con Sensore di presenza corrente/tensione = Si avvicina ad una distanza di 1m dal cavo e si riallontana
 3. Il codice chiede la conferma per fare il passo successivo
 
 ## Passo 2 Posizionamento a cavallo del cavo AT

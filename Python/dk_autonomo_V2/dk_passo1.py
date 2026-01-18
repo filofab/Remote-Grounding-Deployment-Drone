@@ -64,6 +64,9 @@ def yaw_control_from_distances(vehicle, d_left, d_right):
         print(f"[CTRL] YAW DESTRA  | diff {diff} mm")
     return False
 
+
+
+
 # ============================================================
 # VISIONE TOF – MISURA ROBUSTA
 # ============================================================
