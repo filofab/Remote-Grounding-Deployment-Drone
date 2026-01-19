@@ -1,28 +1,12 @@
 
-
-import cv2
-import numpy as np
 import ArducamDepthCamera as ac
-import time
+import time as pytime
 
 from util import *
 from dk_passo1 import esegui_passo_1, manovra_guidata_distanze
 from dronekit import connect, VehicleMode
-from config import (
-    SOGLIA_TOLLERANZA_MM,
-    GUADAGNO_YAW,
-    MAX_YAW_DEG,
-    ROI_WIDTH_PX,
-    MIN_DISTANCE_MM,
-    PERCENTILE_DISTANCE,
-    CONFIDENCE_THRESHOLD,
-    MAX_DISTANCE_MM,
-    VERTICAL_LINE_SPACING_PX,
-    MAX_DISTANCE,
-    CONNECTION_STRING,
-    TARGET_ALTITUDE_M
-)
-import config
+from dk_passo2 import esegui_passo_2
+from config import *
 
 
 
@@ -33,14 +17,14 @@ import config
 def arm_and_takeoff(vehicle, target_altitude):
     print("[INFO] Pre-arm checks...")
     while not vehicle.is_armable:
-        time.sleep(1)
+        pytime.sleep(1)
 
     print("[INFO] Arming motors")
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
 
     while not vehicle.armed:
-        time.sleep(0.5)
+        pytime.sleep(0.5)
 
     print(f"[INFO] Taking off to {target_altitude} m")
     vehicle.simple_takeoff(target_altitude)
@@ -50,7 +34,7 @@ def arm_and_takeoff(vehicle, target_altitude):
         if alt >= target_altitude * 0.95:
             print("[OK] Target altitude reached")
             break
-        time.sleep(0.5)
+        pytime.sleep(0.5)
 
 
 
@@ -91,12 +75,12 @@ def main():
     stato1_2=0  #variabile per la gestione
     stato_tempo=None
     attesa_conferma1_1 = False
+    attesa_conferma1_2 = False
+    attesa_conferma2 = False
     while True:
         frame = cam.requestFrame(2000)
 
-        if frame is None:
-            continue
-        if isinstance(frame, ac.DepthData):
+        if frame is not None and isinstance(frame, ac.DepthData):
 
             depth = apply_flip(frame.depth_data)
             confidence = apply_flip(frame.confidence_data)
@@ -125,8 +109,6 @@ def main():
                 cv2.circle(img, (xr, yr), 6, (0, 0, 255), -1)
                 cv2.putText(img, f"R: {d_right} mm", (20, 60),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        elif isinstance(frame, ac.RGBData) and token == 4:
-                    rgb_frame = apply_flip(frame.rgb_data)
 
             ############################################################
             """
@@ -142,10 +124,13 @@ def main():
 
             elif token == 2: #passo 1.2
                 stato1_2, stato_tempo = manovra_guidata_distanze( vehicle, d_left, d_right, stato1_2, stato_tempo)
+                if stato1_2 == 3:
+                    attesa_conferma1_1 = False
+                    attesa_conferma1_2 = True
 
             elif token == 3: #passo 2
-                # esegui_passo_2()
-                pass
+                attesa_conferma2 = esegui_passo_2(vehicle)
+                attesa_conferma1_2 = False
 
             elif token == 4: #passo 3 (AI)
                 # esegui_passo_3()
@@ -153,13 +138,30 @@ def main():
 
             ############################################################
             if attesa_conferma1_1:
-                cv2.putText(img, "Passo 1 completato",
+                cv2.putText(img, "Allineamento completato",
                             (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (0, 255, 0), 2)
 
                 cv2.putText(img, "Y = continua | R = reset",
                             (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
                             (0, 255, 255), 2)
+            elif attesa_conferma1_2:
+                cv2.putText(img, "Verifica completato",
+                            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                            (0, 255, 0), 2)
+
+                cv2.putText(img, "Y = continua | R = reset",
+                            (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                            (0, 255, 255), 2)
+            elif attesa_conferma2:
+                cv2.putText(img, "Posizionamento azimutale completato",
+                            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                            (0, 255, 0), 2)
+
+                cv2.putText(img, "Y = continua | R = reset",
+                            (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                            (0, 255, 255), 2)
+
 
             cv2.imshow("preview", img)
             cam.releaseFrame(frame)
@@ -172,11 +174,11 @@ def main():
             token+=1
             print("[MODE] Missione autonoma ATTIVA")
 
-        elif key == ord("s"):  #TODO
-            mission_active = False
+        elif key == ord("s"):
             print("[MODE] Missione in PAUSA")
-
+            token = 0
         elif key == ord("l"):
+            token = 0
             print("[MODE] Atterraggio")
             vehicle.mode = VehicleMode("LAND")
 
@@ -184,6 +186,7 @@ def main():
             print("[INFO] Reset Passo 0")
             tempo = None
             attesa_conferma1_1 = False
+            attesa_conferma1_2 = False
             token = 0
 
         elif key == ord("q"):

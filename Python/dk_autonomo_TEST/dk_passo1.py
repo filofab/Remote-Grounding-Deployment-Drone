@@ -1,18 +1,7 @@
 import cv2
 import ArducamDepthCamera as ac
 from pymavlink import mavutil
-from config import (
-    SOGLIA_TOLLERANZA_MM,
-    GUADAGNO_YAW,
-    MAX_YAW_DEG,
-    ROI_WIDTH_PX,
-    MIN_DISTANCE_MM,
-    PERCENTILE_DISTANCE,
-    CONFIDENCE_THRESHOLD,
-    MAX_DISTANCE_MM,
-    VERTICAL_LINE_SPACING_PX,
-    MAX_DISTANCE
-)
+from config import *
 
 import numpy as np
 from util import *
@@ -20,24 +9,6 @@ import time
 
 tempo = None
 
-def condition_yaw(vehicle, heading, direction=1):
-    """
-    direction:
-        1  -> CW  (destra)
-       -1  -> CCW (sinistra)
-    """
-    dir_val = 1 if direction == 1 else -1
-    msg = vehicle.message_factory.command_long_encode(
-        0, 0,
-        mavutil.mavlink.MAV_CMD_CONDITION_YAW,
-        0,
-        heading,
-        0,
-        dir_val,
-        1,
-        0, 0, 0
-    )
-    vehicle.send_mavlink(msg)
 
 
 def yaw_control_from_distances(vehicle, d_left, d_right):
@@ -63,6 +34,9 @@ def yaw_control_from_distances(vehicle, d_left, d_right):
         condition_yaw(vehicle, yaw_cmd, direction=1)
         print(f"[CTRL] YAW DESTRA  | diff {diff} mm")
     return False
+
+
+
 
 # ============================================================
 # VISIONE TOF – MISURA ROBUSTA
