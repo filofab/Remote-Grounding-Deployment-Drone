@@ -38,16 +38,14 @@ def arm_and_takeoff(vehicle, target_altitude):
 
 
 
-
-
-
 def main():
+
 
     print("[INFO] Avvio sistema TOF + DroneKit")
 
     # ---------- DRONE ----------
     print("[INFO] Connessione al drone...")
-    vehicle = connect(CONNECTION_STRING, wait_ready=True, timeout=60)
+    vehicle = connect(CONNECTION_STRING, wait_ready=True, timeout=120)
     arm_and_takeoff(vehicle, TARGET_ALTITUDE_M)
 
     # ---------- CAMERA ----------
@@ -70,7 +68,9 @@ def main():
     print("q : chiusura")
 
 
+
     token=0 #-> token che identifica il passo, 0 guida controllata
+    mostra_popup = False  # variabile per la gestione dei popup
     tempo=None  #variabile per il controllo del tempo in tolleranza
     stato1_2=0  #variabile per la gestione
     stato_tempo=None
@@ -141,32 +141,54 @@ def main():
                 # esegui_passo_3()
                 pass
 
-            ############################################################
-            if attesa_conferma1_1:
-                cv2.putText(img, "Allineamento completato",
-                            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (0, 255, 0), 2)
+            ######################### COMUNICAZIONE STATI PREVIEW ###################################
+            if attesa_conferma1_1 or attesa_conferma1_2 or attesa_conferma2:
 
-                cv2.putText(img, "Y = continua | R = reset",
-                            (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
-                            (0, 255, 255), 2)
-            elif attesa_conferma1_2:
-                cv2.putText(img, "Verifica completato",
-                            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (0, 255, 0), 2)
+                if attesa_conferma1_1:
+                    title = "Allineamento completato"
+                elif attesa_conferma1_2:
+                    title = "Verifica completata"
+                elif attesa_conferma2:
+                    title = "Posizionamento azimutale completato"
 
-                cv2.putText(img, "Y = continua | R = reset",
-                            (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
-                            (0, 255, 255), 2)
-            elif attesa_conferma2:
-                cv2.putText(img, "Posizionamento azimutale completato",
-                            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (0, 255, 0), 2)
+                lines = [
+                    (title, (255, 255, 255), FONT_SCALE_TITLE),
+                    ("y = continua", (0, 255, 0), FONT_SCALE_CMD),
+                    ("r = reset", (0, 0, 255), FONT_SCALE_CMD),
+                ]
 
-                cv2.putText(img, "Y = continua | R = reset",
-                            (30, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
-                            (0, 255, 255), 2)
+                h, w = img.shape[:2]
+                sizes = [cv2.getTextSize(t, FONT, s, FONT_THICK)[0] for t, _, s in lines]
 
+                box_w = max(sw for sw, sh in sizes) + 2 * PADDING
+                box_h = sum(sh for sw, sh in sizes) + (len(lines) + 1) * PADDING
+
+                x0 = (w - box_w) // 2
+                y0 = (h - box_h) // 2
+
+                # sfondo nero
+                cv2.rectangle(
+                    img,
+                    (x0, y0),
+                    (x0 + box_w, y0 + box_h),
+                    (0, 0, 0),
+                    -1
+                )
+
+                # testo
+                y = y0 + PADDING + sizes[0][1]
+                for (text, color, scale), (tw, th) in zip(lines, sizes):
+                    cv2.putText(
+                        img,
+                        text,
+                        (x0 + (box_w - tw) // 2, y),
+                        FONT,
+                        scale,
+                        color,
+                        FONT_THICK,
+                        cv2.LINE_AA
+                    )
+                    y += th + PADDING
 
             cv2.imshow("preview", img)
             cam.releaseFrame(frame)
@@ -174,25 +196,38 @@ def main():
 
 
 
+
+            ######################### COMUNICAZIONE TASTIERA ###################################
         key = cv2.waitKey(1) & 0xFF
+
         if key == ord("y"):
-            token+=1
             print("[MODE] Missione autonoma ATTIVA")
+            token += 1
+
+            mostra_popup = False
+            attesa_conferma1_1 = False
+            attesa_conferma1_2 = False
+            attesa_conferma2 = False
+
+        elif key == ord("r"):
+            print("[INFO] Reset Passo 0")
+
+            mostra_popup = False
+            tempo = None
+            token = 0
+
+            attesa_conferma1_1 = False
+            attesa_conferma1_2 = False
+            attesa_conferma2 = False
 
         elif key == ord("s"):
             print("[MODE] Missione in PAUSA")
             token = 0
-        elif key == ord("l"):
-            token = 0
-            print("[MODE] Atterraggio")
-            vehicle.mode = VehicleMode("LAND")
 
-        elif key == ord('r'):
-            print("[INFO] Reset Passo 0")
-            tempo = None
-            attesa_conferma1_1 = False
-            attesa_conferma1_2 = False
+        elif key == ord("l"):
+            print("[MODE] Atterraggio")
             token = 0
+            vehicle.mode = VehicleMode("LAND")
 
         elif key == ord("q"):
             print("[EXIT] Chiusura sistema")

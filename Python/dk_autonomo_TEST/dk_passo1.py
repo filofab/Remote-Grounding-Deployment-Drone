@@ -5,6 +5,7 @@ from config import *
 
 import numpy as np
 from util import *
+from config import *
 import time
 
 tempo = None
@@ -50,9 +51,8 @@ def esegui_passo_1(vehicle, d_left, d_right, img, tempo):
 
     passati5sec=False
     posizioneCorretta = yaw_control_from_distances(vehicle, d_left, d_right)
-    cv2.putText(img, "AUTONOMO", (20, 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-    
+    draw_bottom_center_text(img, "AUTONOMO")
+
 
     #verifichiamo che mantenga la posizione per 5 secondi
     tempo_in_tolleranza = tempo
@@ -121,6 +121,7 @@ def manovra_guidata_distanze(vehicle, d_left, d_right, stato, stato_tempo):
             if yaw_ok:
                 set_velocity_body(vehicle, vx=-0.15, vy=0, vz=0)
                 print(f"[INDIETRO] d_media={d_media:.0f} mm")
+
             else:
                 set_velocity_body(vehicle, 0, 0, 0)
         else:
