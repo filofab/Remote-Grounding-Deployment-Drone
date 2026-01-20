@@ -8,37 +8,43 @@ import cv2
 from ultralytics import YOLO
 
 # ---------------- CONFIG ----------------
-VIDEO_PATH = "Video/export_lite_video.mp4"
-MODEL_PATH = "colab_trained.pt"   # leggero, sufficiente per test
-CONF_TH = 0.4               # soglia confidenza
-PERSON_CLASS_ID = 0         # 'person' in COCO
+VIDEO_PATH = "Video/export_lite_video.mp4"      #percorso video di input
+MODEL_PATH = "colab_trained.pt"                 #modello addestrato
+CONF_TH = 0.5                                   # soglia confidenza
+PERSON_CLASS_ID = 0
 
-PREVIEW_WIDTH = 640             # preview ridotta
-PREVIEW_HEIGHT = 360
+PREVIEW_WIDTH = 640*2             # preview ridotta
+PREVIEW_HEIGHT = 360*2
 
 # ---------------- UTILITY ----------------
 def draw_text_bottom_center(img, text):
     font = cv2.FONT_HERSHEY_SIMPLEX
-    scale = 3
-    thickness = 2
-    padding = 8
+    scale = 5
+    thickness = 10
+    padding = 15
 
     h, w, _ = img.shape
     (tw, th), _ = cv2.getTextSize(text, font, scale, thickness)
 
-    x1 = w // 2 - tw // 2 - padding
-    y1 = h - th - padding * 2
-    x2 = w // 2 + tw // 2 + padding
-    y2 = h - padding
+    cx = w // 2
+    cy = h // 2
 
-    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 0), -1)
+    x1 = cx - tw // 2 - padding
+    y1 = cy - th // 2 - padding
+    x2 = cx + tw // 2 + padding
+    y2 = cy + th // 2 + padding
+
+    # sfondo nero
+    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), -1)
+
+    # testo bianco centrato
     cv2.putText(
         img,
         text,
-        (w // 2 - tw // 2, h - padding),
+        (cx - tw // 2, cy + th // 2),
         font,
         scale,
-        (255, 255, 255),
+        (0, 0, 0),
         thickness,
         cv2.LINE_AA
     )
@@ -51,7 +57,7 @@ def main():
     if not cap.isOpened():
         raise RuntimeError("Errore apertura video")
 
-    persona_detected = False   # <-- VARIABILE BOOLEANA RICHIESTA
+    persona_detected = False   # <-- VARIABILE BOOLEANA
 
     while True:
         ret, frame = cap.read()
@@ -87,9 +93,6 @@ def main():
 
         cv2.imshow("Preview Detection", frame_small)
 
-        # ---- DEBUG / INTEGRAZIONE ----
-        # Qui puoi leggere direttamente la variabile:
-        # persona_detected == True / False
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
