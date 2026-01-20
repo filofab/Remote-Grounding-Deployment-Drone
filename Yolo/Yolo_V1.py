@@ -11,10 +11,11 @@ frame_step = int(input("Esegui inferenza ogni quanti frame? (es. 1, 5, 10): "))
 # ==========================
 # CONFIGURAZIONE
 # ==========================
-OUTPUT_PATH = "Detection.mp4"
-MODEL_PATH = "yolov8n.pt"
+OUTPUT_PATH = "Detection4.mp4"
+MODEL_PATH = "colab_trained.pt"
 CONF_THRESHOLD = 0.4
 LOG_INTERVAL = 10.0  # secondi
+WINDOW_NAME = "YOLO Person Detection"
 
 # ==========================
 # INIZIALIZZAZIONE YOLO
@@ -32,7 +33,7 @@ width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps    = cap.get(cv2.CAP_PROP_FPS)
 if fps <= 0:
-    fps = 25.0
+    fps = 30
 
 # ==========================
 # VIDEO WRITER
