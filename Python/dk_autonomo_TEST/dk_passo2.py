@@ -1,6 +1,7 @@
-
+import cv2
 import time as pytime
 from util import *
+from config import *
 
 
 def esegui_passo_2(vehicle, quota_target, depth_buf, img, stato):
@@ -15,7 +16,7 @@ def esegui_passo_2(vehicle, quota_target, depth_buf, img, stato):
 
     print("[INFO] PASSO 2: salita + ToF down + avanti + yaw SX -->", stato)
 
-    # ---------------- 1. SALITA +1 m ----------------
+    # ---------------- 1. SALITA  ----------------
     if stato == 0:
         if vehicle.location.global_relative_frame.alt < quota_target*0.95:
             set_velocity_body(vehicle, vx=0, vy=0, vz=-0.15)
@@ -26,10 +27,9 @@ def esegui_passo_2(vehicle, quota_target, depth_buf, img, stato):
             print("[INFO] Quota raggiunta")
             stato = 1
 
-    # ---------------- 2. INCLINAZIONE ToF (AUX9) ----------------
+    # ---------------- 2. INCLINAZIONE ToF ----------------
     elif stato == 1:
-        PWM_90_DOWN = 1900
-        set_servo_pwm(vehicle, servo_n=9, pwm=PWM_90_DOWN)
+        set_servo_pwm(vehicle, servo_n=N_SERV_CAM, pwm=PWM_TILT_CAM)
         stato = 2
 
     # ---------------- 3. AVANZAMENTO 1 m ----------------
@@ -53,11 +53,11 @@ def esegui_passo_2(vehicle, quota_target, depth_buf, img, stato):
         
 
     # ---------------- 4. YAW 90° A SINISTRA ----------------
-    elif stato == 3:
-        print("[INFO] Rotazione YAW 90° sinistra")
-        condition_yaw(vehicle, 90, direction=-1)
+        elif stato == 3:
+            print("[INFO] Rotazione YAW 90° sinistra")
+            condition_yaw(vehicle, 90, direction=-1)
 
-        print("[INFO] PASSO 2 completato")
-        stato = 4
+            print("[INFO] PASSO 2 completato")
+            stato = 4
 
     return stato

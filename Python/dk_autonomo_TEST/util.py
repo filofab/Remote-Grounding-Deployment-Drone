@@ -1,10 +1,10 @@
 from datetime import time
 from pymavlink import mavutil
-from config import FLIP_HORIZONTAL, FLIP_VERTICAL,ROI_WIDTH_PX,MIN_DISTANCE_MM,MAX_DISTANCE_MM,CONFIDENCE_THRESHOLD,PERCENTILE_DISTANCE
+from config import *
 import cv2
 import numpy as np
 
-
+# ---------------- ELEMENTI VISIVI ----------------
 def apply_flip(img):
     if FLIP_HORIZONTAL and FLIP_VERTICAL:
         return cv2.flip(img, -1)
@@ -13,6 +13,76 @@ def apply_flip(img):
     elif FLIP_VERTICAL:
         return cv2.flip(img, 0)
     return img
+
+
+def draw_center_text(img, text,
+                     font=cv2.FONT_HERSHEY_SIMPLEX,
+                     scale=1.2,
+                     thickness=2,
+                     padding=10):
+
+    h_img, w_img = img.shape[:2]
+    (w_txt, h_txt), baseline = cv2.getTextSize(text, font, scale, thickness)
+
+    # Coordinate testo (centrato)
+    x = (w_img - w_txt) // 2
+    y = (h_img + h_txt) // 2
+
+    # Rettangolo sfondo nero
+    cv2.rectangle(
+        img,
+        (x - padding, y - h_txt - padding),
+        (x + w_txt + padding, y + baseline + padding),
+        (0, 0, 0),
+        -1
+    )
+
+    # Testo bianco
+    cv2.putText(
+        img,
+        text,
+        (x, y),
+        font,
+        scale,
+        (255, 255, 255),
+        thickness,
+        cv2.LINE_AA
+    )
+
+def draw_bottom_center_text(img, text,
+                            font=cv2.FONT_HERSHEY_SIMPLEX,
+                            scale=0.9,
+                            thickness=2,
+                            margin_bottom=20,
+                            padding=10):
+
+    h_img, w_img = img.shape[:2]
+    (w_txt, h_txt), baseline = cv2.getTextSize(text, font, scale, thickness)
+
+    # Coordinate testo (centrato in basso)
+    x = (w_img - w_txt) // 2
+    y = h_img - margin_bottom
+
+    # Rettangolo sfondo nero
+    cv2.rectangle(
+        img,
+        (x - padding, y - h_txt - padding),
+        (x + w_txt + padding, y + baseline + padding),
+        (0, 0, 0),
+        -1
+    )
+
+    # Testo bianco
+    cv2.putText(
+        img,
+        text,
+        (x, y),
+        font,
+        scale,
+        (255, 255, 255),
+        thickness,
+        cv2.LINE_AA
+    )
 
 
 
