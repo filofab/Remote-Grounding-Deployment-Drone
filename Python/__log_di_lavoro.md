@@ -11,7 +11,7 @@ versione Beta per test interni
 
 
 ## Cartella V4
-
+La Versione 4  corregge
 
 ## Cartella V3
 Backup_V3 fase finale, il drone raggiunge la posizione sopra il 
@@ -26,3 +26,4 @@ Definizione dei file e struttura base del progetto
 
 ## Certella V0
 Prima versione con 1 solo file, scartata
+

@@ -1,0 +1,16 @@
+[DenoisingParams]
+TDenoiseLevel_Depth=3
+SDenoiseLevel_Depth=3
+TDenoiseMethod_Depth=0
+SDenoiseMethod_Depth=1
+TDenoiseLevel_Gray=1
+SDenoiseLevel_Gray=1
+TDenoiseMethod_Gray=0
+SDenoiseMethod_Gray=1
+
+[RepairParams]
+ERDOLvl=3
+
+[ConfidenceParams]
+ValidDistMin=0
+ValidDistMax=7000
