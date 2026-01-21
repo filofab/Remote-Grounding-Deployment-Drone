@@ -57,7 +57,7 @@ def main():
     if not cap.isOpened():
         raise RuntimeError("Errore apertura video")
 
-    persona_detected = False   # <-- VARIABILE BOOLEANA
+    persona_detected = False   # <-- VARIABILE BOOLEANA ############################################################
 
     while True:
         ret, frame = cap.read()
