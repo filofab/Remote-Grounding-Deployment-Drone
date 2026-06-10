@@ -13,7 +13,7 @@ A Remote Grounding Deployment Drone: an unmanned aerial system that autonomously
 There is no build system, package manifest, or test suite. Scripts are run directly:
 
 ```bash
-cd Python/dk_autonomo_V5   # always cd into the version folder — imports are flat (from util import *)
+cd Python/dk_autonomo_V6   # always cd into the version folder — imports are flat (from util import *)
 python main.py
 ```
 
@@ -25,7 +25,7 @@ Dependencies (install manually): `dronekit`, `pymavlink`, `opencv-python`, `nump
 
 The flight code lives in versioned snapshot folders — this is the central convention of the repo:
 
-- `Python/dk_autonomo_V0` … `dk_autonomo_V5` — frozen version snapshots. **V5 is the latest**; older folders are kept as backups and must not be modified.
+- `Python/dk_autonomo_V0` … `dk_autonomo_V6` — frozen version snapshots. **V6 is the latest**; older folders are kept as backups and must not be modified.
 - `Python/dk_autonomo_TEST` — beta version for internal testing.
 - `Python/__log_di_lavoro.md` — the version changelog. **Update this file (in Italian) whenever a new version folder is created**, describing what the version adds.
 
@@ -36,7 +36,7 @@ Other top-level folders:
 - `Yolo/` — YOLOv8 person-detection pipeline, independent of the flight code.
 - `Arducam/` — standalone ToF camera example (`Example.py`) and camera configuration files (`ConfigCamera.json`, `ConfigAlgorithm.json`, `register.json`). Copies of these JSONs appear in some version folders.
 
-## Flight Code Architecture (dk_autonomo_V5)
+## Flight Code Architecture (dk_autonomo_V6)
 
 Each version folder has the same five-file layout:
 
@@ -50,7 +50,7 @@ Each version folder has the same five-file layout:
 
 `main.py` drives the mission with a `token` variable: `0` = manual/controlled flight, `1` = step 1.1 (alignment), `2` = step 1.2 (approach/retreat), `3` = step 2 (positioning over the cable), `4` = station-keeping over the cable awaiting release. Each step signals completion via `attesa_conferma*` flags, which show a confirmation popup; the operator advances with the keyboard.
 
-Keyboard commands: `y` start/confirm next step, `r` reset to token 0, `s` pause, `l` land, `q` quit, `d` release payload (sgancio), `p` toggle simulated person detection (safety-check placeholder for the YOLO integration).
+Keyboard commands: `y` start/confirm next step, `r` reset to token 0, `s` pause, `l` land, `q` quit, `d` release payload (sgancio — refused while `persona_detected` is true; drives the release servo `N_SERV_SGANCIO`), `p` toggle simulated person detection (safety-check placeholder for the YOLO integration).
 
 The operator-confirmation gates between steps are a deliberate safety design — do not remove them when modifying mission logic.
 
